@@ -1,0 +1,5 @@
+[phases.setup]
+nixPkgs = ["php82", "php82Extensions.gd", "php82Extensions.dom", "php82Extensions.xml", "php82Extensions.mbstring"]
+
+[start]
+cmd = "php -S 0.0.0.0:$PORT -t public"
