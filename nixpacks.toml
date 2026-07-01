@@ -6,7 +6,8 @@ nixPkgs = [
   "php82Extensions.dom",
   "php82Extensions.xml",
   "php82Extensions.mbstring",
-  "php82Extensions.zip"
+  "php82Extensions.zip",
+  "nodejs_22"
 ]
 
 [start]
