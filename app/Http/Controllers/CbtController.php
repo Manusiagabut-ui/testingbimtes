@@ -148,4 +148,14 @@ class CbtController extends Controller
         echo "</table>";
         exit;
     }
+
+    public function deleteNilai($id)
+{
+    try {
+        Nilai::findOrFail($id)->delete();
+        return back()->with('sukses', 'Data nilai peserta berhasil dihapus!');
+    } catch (\Exception $e) {
+        return back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
+    }
+}
 }

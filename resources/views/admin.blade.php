@@ -145,42 +145,58 @@
                 </a>
             </div>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Waktu Submit</th>
-                        <th>Nama Peserta</th>
-                        <th>Materi Sesi</th>
-                        <th style="text-align: center;">Benar/Salah</th>
-                        <th style="text-align: right;">Skor Akhir</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($rekapNilai as $nilai)
-                        <tr>
-                            <td style="font-size: 13px; color: #8a90a6;">{{ $nilai->created_at->format('d M Y H:i') }}</td>
-                            <td style="color: #fff; font-weight: 600;">
-                                {{ $nilai->peserta->nama }}<br>
-                                <small style="color: #8a90a6; font-weight: normal;">{{ $nilai->peserta->nomor_peserta }}</small>
-                            </td>
-                            <td>{{ $nilai->examSession->name }}</td>
-                            <td style="text-align: center; font-size: 13px;">
-                                <span style="color: #10b981;">{{ $nilai->jawaban_benar }} B</span> / 
-                                <span style="color: #ef4444;">{{ $nilai->jawaban_salah }} S</span>
-                            </td>
-                            <td style="text-align: right;">
-                                <span class="badge" style="background: {{ $nilai->skor >= 70 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)' }}; color: {{ $nilai->skor >= 70 ? '#10b981' : '#ef4444' }}; font-weight: 700; padding: 6px 12px; font-size: 15px;">
-                                    {{ $nilai->skor }}
-                                </span>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" style="padding: 30px; text-align: center; color: #888;">Belum ada peserta yang menyelesaikan ujian.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+            @php
+                // Kelompokkan nilai berdasarkan nama sesi
+                $groupedNilai = $rekapNilai->groupBy('examSession.name');
+            @endphp
+
+            @forelse($groupedNilai as $sessionName => $nilaies)
+                <div class="card" style="margin-bottom: 20px; background: #1e2235;">
+                    <h3 style="color: #38bdf8; margin-bottom: 15px;">📖 Materi: {{ $sessionName }}</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Waktu Submit</th>
+                                <th>Nama Peserta</th>
+                                <th style="text-align: center;">Benar/Salah</th>
+                                <th style="text-align: right;">Skor Akhir</th>
+                                <th style="text-align: center;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($nilaies as $nilai)
+                                <tr>
+                                    <td style="font-size: 13px; color: #8a90a6;">{{ $nilai->created_at->format('d M Y H:i') }}</td>
+                                    <td style="color: #fff; font-weight: 600;">
+                                        {{ $nilai->peserta->nama }}<br>
+                                        <small style="color: #8a90a6; font-weight: normal;">{{ $nilai->peserta->nomor_peserta }}</small>
+                                    </td>
+                                    <td style="text-align: center; font-size: 13px;">
+                                        <span style="color: #10b981;">{{ $nilai->jawaban_benar }} B</span> / 
+                                        <span style="color: #ef4444;">{{ $nilai->jawaban_salah }} S</span>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <span class="badge" style="background: {{ $nilai->skor >= 70 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)' }}; color: {{ $nilai->skor >= 70 ? '#10b981' : '#ef4444' }}; font-weight: 700; padding: 6px 12px; font-size: 15px;">
+                                            {{ $nilai->skor }}
+                                        </span>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <form action="{{ route('admin.nilai.delete', $nilai->id) }}" method="POST" onsubmit="return confirm('Hapus jawaban peserta ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-delete">🗑️ Hapus</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @empty
+                <div class="card" style="text-align: center; color: #888; padding: 30px;">
+                    Belum ada peserta yang menyelesaikan ujian.
+                </div>
+            @endforelse
         </div>
     </div> </div> 
     <script>

@@ -54,6 +54,7 @@ Route::middleware(['admin.check'])->group(function () {
     // --- 1. Kelompok Pengelolaan Soal & Materi ---
     Route::post('/admin/upload', [CbtController::class, 'uploadExcel'])->name('admin.upload');
     Route::delete('/admin/materi/{id}', [CbtController::class, 'deleteMateri'])->name('admin.delete');
+    Route::delete('/admin/nilai/delete/{id}', [CbtController::class, 'deleteNilai'])->name('admin.nilai.delete');
     
     // --- 2. Kelompok Pengelolaan Peserta Ujian ---
     Route::get('/admin/peserta', [PesertaController::class, 'index'])->name('admin.peserta.index');
