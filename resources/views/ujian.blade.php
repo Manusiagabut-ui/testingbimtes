@@ -413,6 +413,14 @@
         color: var(--text);
         letter-spacing: -0.1px;
       }
+      .question-image {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border2);
+      margin-top: 16px;
+      }
       .options-list {
         display: flex;
         flex-direction: column;
@@ -1748,8 +1756,11 @@
         const session = SESSIONS_DATA[currentSession];
         const question = session.questions[currentQuestion];
         const currentAnswer = answers[currentSession][currentQuestion];
-        document.getElementById("questionText").innerHTML =
-          `<i class="fas fa-question-circle"></i> ${question.text}`;
+       const gambarHtml = question.gambar
+  ? `<img src="/storage/${question.gambar}" class="question-image" alt="Gambar soal">`
+  : "";
+document.getElementById("questionText").innerHTML =
+  `<i class="fas fa-question-circle"></i> ${question.text}${gambarHtml}`;
         
         const letters = ["A", "B", "C", "D", "E"];
         

@@ -11,13 +11,22 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class QuestionsImport implements ToCollection, WithHeadingRow
 {
+    protected array $rowImages;
+
+    public function __construct(array $rowImages = [])
+    {
+        $this->rowImages = $rowImages;
+    }
+
     public function collection(Collection $rows)
     {
-        foreach ($rows as $row) {
-            $session = ExamSession::firstOrCreate( // Ganti ini
-        ['name' => trim($row['materi'])],
-        ['duration' => $row['durasi'] ?? 30]
-    );
+        foreach ($rows as $index => $row) {
+            $actualExcelRow = $index + 2; // +2 krn header row + index mulai 0
+
+            $session = ExamSession::firstOrCreate(
+                ['name' => trim($row['materi'])],
+                ['duration' => $row['durasi'] ?? 30]
+            );
 
             $optionsData = [];
             if (!empty($row['pilihan_a'])) $optionsData[] = $row['pilihan_a'];
@@ -31,10 +40,11 @@ class QuestionsImport implements ToCollection, WithHeadingRow
             $correctIndex = $letterToKey[$correctLetter] ?? 0;
 
             $question = Question::create([
-        'exam_session_id' => $session->id, // Ganti ini
-        'text' => $row['pertanyaan'],
-        'correct' => $correctIndex,
-    ]);
+                'exam_session_id' => $session->id,
+                'text'            => $row['pertanyaan'],
+                'correct'         => $correctIndex,
+                'gambar'          => $this->rowImages[$actualExcelRow] ?? null,
+            ]);
 
             foreach ($optionsData as $optionText) {
                 Option::create([

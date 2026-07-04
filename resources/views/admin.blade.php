@@ -74,7 +74,8 @@
     <div id="tab-materi-content">
         <div class="card">
             <h2>📤 Upload Soal Ujian (Excel)</h2>
-            <p style="color: #888; font-size: 14px;">Silakan pilih file Excel (.xlsx) yang berisi format soal, lalu klik tombol di bawah untuk memproses otomatis.</p>
+            <p style="color: #888; font-size: 14px;">Silakan pilih file Excel (.xlsx) yang berisi format soal, lalu klik tombol di bawah untuk memproses otomatis.<br>
+            <b style="color:#38bdf8;">Butuh gambar di soal?</b> Insert gambar langsung ke sel Excel (kolom "gambar") di baris soal yang sesuai — sistem otomatis mendeteksinya. <i>Fitur gambar cuma jalan untuk format .xlsx, bukan .xls/.csv.</i></p>
             <form action="{{ route('admin.upload') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="form-group">

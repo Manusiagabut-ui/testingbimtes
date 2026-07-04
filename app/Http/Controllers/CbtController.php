@@ -8,6 +8,9 @@ use App\Models\Peserta;
 use App\Models\Nilai;
 use App\Imports\QuestionsImport;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use Illuminate\Support\Facades\Storage;
 
 class CbtController extends Controller
 {
@@ -53,18 +56,42 @@ class CbtController extends Controller
 
     // Fungsi Upload Excel Soal
     public function uploadExcel(Request $request)
-    {
-        $request->validate([
-            'file_excel' => 'required|mimes:xlsx,xls,csv|max:2048'
-        ]);
+{
+    $request->validate([
+        'file_excel' => 'required|mimes:xlsx,xls,csv|max:5120'
+    ]);
 
-        try {
-            Excel::import(new QuestionsImport, $request->file('file_excel'));
-            return back()->with('sukses', 'Gokil! Soal Excel berhasil di-import!');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Waduh gagal membaca file: ' . $e->getMessage());
+    try {
+        $path = $request->file('file_excel')->getRealPath();
+        $rowImages = [];
+
+        if ($request->file('file_excel')->getClientOriginalExtension() === 'xlsx') {
+            $spreadsheet = IOFactory::load($path);
+            $sheet = $spreadsheet->getActiveSheet();
+
+            foreach ($sheet->getDrawingCollection() as $drawing) {
+                $coordinate = $drawing->getCoordinates(); // contoh: "J5"
+                $row = (int) preg_replace('/[^0-9]/', '', $coordinate);
+
+                if ($drawing instanceof Drawing) {
+                    $zip = fopen($drawing->getPath(), 'r');
+                    $contents = stream_get_contents($zip);
+                    fclose($zip);
+
+                    $filename = 'soal_' . uniqid() . '.' . strtolower($drawing->getExtension());
+                    Storage::disk('public')->put('questions/' . $filename, $contents);
+
+                    $rowImages[$row] = 'questions/' . $filename;
+                }
+            }
         }
+
+        Excel::import(new QuestionsImport($rowImages), $request->file('file_excel'));
+        return back()->with('sukses', 'Gokil! Soal (beserta gambar kalau ada) berhasil di-import!');
+    } catch (\Exception $e) {
+        return back()->with('error', 'Waduh gagal membaca file: ' . $e->getMessage());
     }
+}
 
     // Fungsi Hapus Materi Ujian
     public function deleteMateri($id)
