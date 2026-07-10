@@ -15,7 +15,7 @@ public function examSession()
 
     // Relasi: Satu pertanyaan punya banyak pilihan jawaban
     public function options()
-    {
-        return $this->hasMany(Option::class);
-    }
+{
+    return $this->hasMany(Option::class)->orderBy('id');
+}
 }
