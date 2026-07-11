@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Question extends Model
 {
     protected $fillable = ['exam_session_id', 'text', 'correct', 'gambar'];
+    protected $casts = [
+        'correct' => 'integer',
+    ];
 
 public function examSession()
 {

@@ -1398,13 +1398,14 @@
 
     <script>
       // ==================== ENKRIPSI KUNCI JAWABAN ====================
-      const ENCRYPT_KEY = 7;
-      function encryptAnswer(ans) {
-        return ans + ENCRYPT_KEY;
-      }
-      function decryptAnswer(enc) {
-        return enc - ENCRYPT_KEY;
-      }
+      // ==================== ENKRIPSI KUNCI JAWABAN ====================
+const ENCRYPT_KEY = 7;
+function encryptAnswer(ans) {
+  return Number(ans) + ENCRYPT_KEY;
+}
+function decryptAnswer(enc) {
+  return Number(enc) - ENCRYPT_KEY;
+}
 
       // ==================== DATA SOAL DARI DATABASE ====================
       let SESSIONS_DATA = []; 
