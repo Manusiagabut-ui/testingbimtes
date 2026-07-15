@@ -1981,49 +1981,50 @@ document.getElementById("questionText").innerHTML =
       // ==================== KIRIM HASIL UJIAN KE DATABASE LARAVEL ====================
       // Dipanggil otomatis dari showFinalResult() begitu siswa menyelesaikan SEMUA sesi.
       function kirimHasilUjianKeServer(finalScore, totalCorrect, totalQuestions, isPass, durasiMenit) {
-        // Rekap per sesi/materi. `materi_id` di sini ambil dari field "id" hasil /api/soal —
-        // SESUAIKAN nama field-nya kalau di tabel/migration kamu nama kolomnya beda (mis. sesi_id, ujian_id, dll).
-        const urlParams = new URLSearchParams(window.location.search);
-        const idMateri = urlParams.get('session_id');
-        const detailSesi = sessionResults.map((r) => ({
-          materi_id: SESSIONS_DATA[r.sessionIndex] ? SESSIONS_DATA[r.sessionIndex].id : null,
-          nama_materi: r.sessionName,
-          total_soal: r.totalQuestions,
-          jawaban_benar: r.correct,
-          jawaban_salah: r.totalQuestions - r.correct,
-          skor: r.score,
-        }));
+  const detailSesi = sessionResults.map((r) => ({
+    materi_id: SESSIONS_DATA[r.sessionIndex] ? SESSIONS_DATA[r.sessionIndex].id : null,
+    nama_materi: r.sessionName,
+    total_soal: r.totalQuestions,
+    jawaban_benar: r.correct,
+    jawaban_salah: r.totalQuestions - r.correct,
+    skor: r.score,
+  }));
 
-        fetch('/api/submit-ujian', {
-    method: 'POST',
-    headers: {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+  const semuaRequest = detailSesi.map((item) =>
+    fetch('/api/submit-ujian', {
+      method: 'POST',
+      headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-    },
-    body: JSON.stringify({
-        // Sesuaikan dengan yang dibutuhkan oleh Nilai::create di CbtController
-        peserta_id: "{{ session('peserta_id') }}", // Pastikan ID peserta dikirim
-        session_id: idMateri,                     // Pastikan ID sesi ujian dikirim
-        total_soal: totalQuestions,
-        jawaban_benar: totalCorrect,
-        jawaban_salah: totalQuestions - totalCorrect,
-        skor: finalScore,
+        'X-CSRF-TOKEN': csrfToken,
+      },
+      body: JSON.stringify({
+        peserta_id: "{{ session('peserta_id') }}",
+        session_id: item.materi_id,
+        total_soal: item.total_soal,
+        jawaban_benar: item.jawaban_benar,
+        jawaban_salah: item.jawaban_salah,
+        skor: item.skor,
         durasi_menit: durasiMenit,
-    }),
-})
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.status === 'success') {
-              showToast('Nilai berhasil disimpan ke server!', false);
-            } else {
-              showToast('Gagal menyimpan nilai: ' + data.message);
-            }
-          })
-          .catch((error) => {
-            console.error('Gagal mengirim hasil ujian:', error);
-            showToast('Koneksi gagal, nilai belum tersimpan ke server.');
-          });
+      }),
+    }).then((response) => response.json())
+  );
+
+  Promise.all(semuaRequest)
+    .then((results) => {
+      const semuaSukses = results.every((r) => r.status === 'success');
+      if (semuaSukses) {
+        showToast('Nilai seluruh materi berhasil disimpan ke server!', false);
+      } else {
+        showToast('Sebagian nilai gagal disimpan, cek koneksi.');
       }
+    })
+    .catch((error) => {
+      console.error('Gagal mengirim hasil ujian:', error);
+      showToast('Koneksi gagal, nilai belum tersimpan ke server.');
+    });
+}
 
       function showFinalResult() {
         // 🔓 Ujian selesai total: lepas kunci anti-cheat & keluar dari fullscreen.
