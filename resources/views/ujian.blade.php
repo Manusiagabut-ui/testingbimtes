@@ -406,13 +406,14 @@
         max-width: 760px;
       }
       .question-text {
-        font-size: 17px;
-        font-weight: 500;
-        line-height: 1.7;
-        margin-bottom: 28px;
-        color: var(--text);
-        letter-spacing: -0.1px;
-      }
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.7;
+  margin-bottom: 28px;
+  color: var(--text);
+  letter-spacing: -0.1px;
+  white-space: pre-line;  
+}
       .question-image {
       display: block;
       max-width: 100%;
@@ -421,6 +422,11 @@
       border: 1px solid var(--border2);
       margin-top: 16px;
       }
+   bdi[dir="rtl"] {
+  font-family: 'Traditional Arabic', 'Amiri', 'Scheherazade New', serif;
+  font-size: 1.15em;
+  unicode-bidi: isolate;
+}
       .options-list {
         display: flex;
         flex-direction: column;
@@ -1752,7 +1758,19 @@ function decryptAnswer(enc) {
         if (timeLeft <= 60) timerElem.classList.add("warning");
         else timerElem.classList.remove("warning");
       }
-
+function isolateArabic(text) {
+  return text.replace(
+    /([\u0600-\u06FF][\u0600-\u06FF\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0660-\u0669\s.,،؛؟!:ـ«»'"()\-]*[\u0600-\u06FF]|[\u0600-\u06FF])/g,
+    (m) => `<bdi dir="rtl">${m}</bdi>`
+  );
+}
+        function normalizeText(text) {
+  const PARA_BREAK = '§§PARA§§';
+  let t = text.replace(/\n\s*\n/g, PARA_BREAK); // lindungi jeda paragraf asli
+  t = t.replace(/\n/g, ' ');                     // sisa \n tunggal jadi spasi
+  t = t.split(PARA_BREAK).join('\n\n');          // kembalikan jeda paragraf
+  return t.replace(/\s+/g, (m) => (m.includes('\n') ? m : ' ')); // rapihin spasi ganda
+}
       function renderCurrentQuestion() {
         const session = SESSIONS_DATA[currentSession];
         const question = session.questions[currentQuestion];
@@ -1761,7 +1779,7 @@ function decryptAnswer(enc) {
   ? `<img src="/storage/${question.gambar}" class="question-image" alt="Gambar soal">`
   : "";
 document.getElementById("questionText").innerHTML =
-  `<i class="fas fa-question-circle"></i> ${question.text}${gambarHtml}`;
+  `<i class="fas fa-question-circle"></i> ${isolateArabic(normalizeText(question.text))}${gambarHtml}`;
         
         const letters = ["A", "B", "C", "D", "E"];
         
@@ -1786,7 +1804,7 @@ document.getElementById("questionText").innerHTML =
               return `
     <div class="option-item ${currentAnswer === idx ? "selected" : ""}" data-opt-index="${idx}">
       <div class="option-letter">${letters[idx]}</div>
-      <div class="option-text">${txt}</div>
+     <div class="option-text">${isolateArabic(normalizeText(txt))}</div>
     </div>
   `;
             }
