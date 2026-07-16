@@ -116,7 +116,7 @@ class CbtController extends Controller
     try {
         $nilai = Nilai::create([
             // Ambil dari request yang dikirim dari form/js frontend
-            'peserta_id'      => $request->peserta_id, 
+            'peserta_id' => session('peserta_id'), 
             'exam_session_id' => $request->session_id,
             'total_soal'      => $request->total_soal,
             'jawaban_benar'   => $request->jawaban_benar,
