@@ -1248,6 +1248,8 @@
               id="studentName"
               placeholder="Masukkan nama lengkap"
               value="{{ $peserta->nama ?? '' }}"
+              readonly
+              style="opacity: 0.75; cursor: not-allowed;"
             />
           </div>
           <div class="form-group">
@@ -1257,6 +1259,8 @@
               id="studentNumber"
               placeholder="Masukkan nomor peserta"
               value="{{ $peserta->nomor_peserta ?? '' }}"
+              readonly
+              style="opacity: 0.75; cursor: not-allowed;"
             />
           </div>
           <div class="info-grid-login">
@@ -1278,7 +1282,7 @@
             </div>
           </div>
           <button class="btn btn-primary" id="startExamBtn">
-            Mulai Ujian →
+            🔒 Mulai Ujian (Layar Akan Terkunci Otomatis) →
           </button>
         </div>
       </div>
@@ -1437,14 +1441,17 @@ function decryptAnswer(enc) {
 
               // Jalankan pembaruan data statistik di halaman login secara otomatis
               updateLoginScreenInfo();
-              
-              // 🌟 OTOMATIS BYPASS: Jika nama & nomor sudah terisi dari Session Laravel, langsung gas mulai ujian!
-              const autoName = document.getElementById("studentName").value.trim();
-              const autoNumber = document.getElementById("studentNumber").value.trim();
-              if (autoName && autoNumber) {
-                  startExam();
-              }
-              
+
+              // ⚠️ CATATAN PENTING: JANGAN auto-panggil startExam() di sini!
+              // Browser (Chrome/Firefox/dkk) HANYA mengizinkan requestFullscreen()
+              // jika dipicu langsung dari klik/tap asli pengguna. Kalau startExam()
+              // dipanggil otomatis lewat kode (bukan dari klik tombol), permintaan
+              // fullscreen akan DITOLAK DIAM-DIAM oleh browser — ujian jadi jalan
+              // tanpa fullscreen & tanpa terkunci. Makanya di sini kita cuma
+              // menyiapkan data (nama & nomor sudah terisi otomatis dari sesi
+              // Laravel), dan biarkan siswa menekan tombol "Mulai Ujian" sendiri.
+              // Klik tombol itulah yang sah sebagai user-gesture buat browser.
+
           } catch (error) {
               console.error("Gagal memuat soal:", error);
           }
