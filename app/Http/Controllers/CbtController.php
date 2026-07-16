@@ -139,39 +139,68 @@ class CbtController extends Controller
     }
 }
 
-    // 🌟 BARU: Fungsi Download Rekap Nilai format Excel Instan
+    // 🌟 UPDATED: Fungsi Download Rekap Nilai format Excel — sekarang WIDE FORMAT
+    // 1 baris = 1 peserta, kolom = tiap materi, + kolom Rata-Rata di akhir.
+    // Kalau peserta mengerjakan 1 materi lebih dari sekali (retake), yang dipakai
+    // adalah percobaan TERAKHIR (created_at paling baru) untuk materi tersebut.
     public function exportNilaiExcel()
     {
         $data = Nilai::with(['peserta', 'examSession'])->get();
         $fileName = "Rekap_Nilai_CBT_" . date('Y-m-d') . ".xls";
-        
+
         header("Content-Type: application/vnd.ms-excel");
         header("Content-Disposition: attachment; filename=\"$fileName\"");
-        
-        echo "
-        <table border='1'>
-            <tr>
-                <th bgcolor='#38bdf8'>No</th>
-                <th bgcolor='#38bdf8'>Nomor Peserta</th>
-                <th bgcolor='#38bdf8'>Nama Siswa</th>
-                <th bgcolor='#38bdf8'>Materi Ujian</th>
-                <th bgcolor='#38bdf8'>Benar</th>
-                <th bgcolor='#38bdf8'>Salah</th>
-                <th bgcolor='#38bdf8'>Skor Akhir</th>
-            </tr>";
-            
-        foreach($data as $key => $row) {
-            echo "
-            <tr>
-                <td>".($key+1)."</td>
-                <td>'".$row->peserta->nomor_peserta."</td>
-                <td>".$row->peserta->nama."</td>
-                <td>".$row->examSession->name."</td>
-                <td>".$row->jawaban_benar."</td>
-                <td>".$row->jawaban_salah."</td>
-                <td>".$row->skor."</td>
-            </tr>";
+
+        // Daftar semua nama materi yang pernah diujikan, urut abjad, dipakai sebagai kolom
+        $materiList = $data->pluck('examSession.name')
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
+        // Kelompokkan seluruh nilai per peserta (pakai peserta_id, bukan nomor_peserta,
+        // supaya aman kalau ada nomor peserta yang sama persis tulisannya)
+        $groupedByPeserta = $data->groupBy('peserta_id');
+
+        echo "<table border='1'>";
+        echo "<tr>";
+        echo "<th bgcolor='#38bdf8'>No</th>";
+        echo "<th bgcolor='#38bdf8'>Nomor Peserta</th>";
+        echo "<th bgcolor='#38bdf8'>Nama Siswa</th>";
+        foreach ($materiList as $materi) {
+            echo "<th bgcolor='#38bdf8'>" . htmlspecialchars($materi) . "</th>";
         }
+        echo "<th bgcolor='#38bdf8'>Rata-Rata</th>";
+        echo "</tr>";
+
+        $no = 1;
+        foreach ($groupedByPeserta as $pesertaId => $hasilPeserta) {
+            $peserta = $hasilPeserta->first()->peserta;
+            if (!$peserta) continue; // skip kalau data peserta-nya sudah terhapus
+
+            // Kalau ada retake, ambil yang created_at-nya paling baru per materi
+            $skorPerMateri = $hasilPeserta
+                ->sortBy('created_at')
+                ->keyBy(fn($n) => $n->examSession->name ?? '-');
+
+            echo "<tr>";
+            echo "<td>" . ($no++) . "</td>";
+            echo "<td>'" . $peserta->nomor_peserta . "</td>";
+            echo "<td>" . $peserta->nama . "</td>";
+
+            foreach ($materiList as $materi) {
+                if (isset($skorPerMateri[$materi])) {
+                    echo "<td>" . number_format($skorPerMateri[$materi]->skor, 2) . "</td>";
+                } else {
+                    echo "<td>-</td>";
+                }
+            }
+
+            $rataRata = $skorPerMateri->avg('skor');
+            echo "<td><b>" . number_format($rataRata, 2) . "</b></td>";
+            echo "</tr>";
+        }
+
         echo "</table>";
         exit;
     }
@@ -185,4 +214,24 @@ class CbtController extends Controller
         return back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
     }
 }
+
+    // 🌟 BARU: Hapus SEMUA nilai (semua materi) milik satu peserta sekaligus
+    public function deleteNilaiByPeserta($pesertaId)
+    {
+        try {
+            $peserta = Peserta::find($pesertaId);
+            $jumlah = Nilai::where('peserta_id', $pesertaId)->count();
+
+            if ($jumlah === 0) {
+                return back()->with('error', 'Tidak ada data nilai untuk peserta ini.');
+            }
+
+            Nilai::where('peserta_id', $pesertaId)->delete();
+
+            $nama = $peserta->nama ?? 'peserta ini';
+            return back()->with('sukses', "Berhasil menghapus semua ($jumlah) hasil ujian milik $nama!");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
+        }
+    }
 }
