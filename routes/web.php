@@ -55,7 +55,10 @@ Route::middleware(['admin.check'])->group(function () {
     Route::post('/admin/upload', [CbtController::class, 'uploadExcel'])->name('admin.upload');
     Route::delete('/admin/materi/{id}', [CbtController::class, 'deleteMateri'])->name('admin.delete');
     Route::delete('/admin/nilai/delete/{id}', [CbtController::class, 'deleteNilai'])->name('admin.nilai.delete');
-    
+
+    // 🌟 BARU: Hapus semua nilai (semua materi) milik satu peserta sekaligus
+    Route::delete('/admin/nilai/delete-peserta/{pesertaId}', [CbtController::class, 'deleteNilaiByPeserta'])->name('admin.nilai.deleteByPeserta');
+
     // --- 2. Kelompok Pengelolaan Peserta Ujian ---
     Route::get('/admin/peserta', [PesertaController::class, 'index'])->name('admin.peserta.index');
     Route::post('/admin/peserta/store', [PesertaController::class, 'store'])->name('admin.peserta.store');
