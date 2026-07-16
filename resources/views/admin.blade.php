@@ -152,10 +152,22 @@
 @endphp
 
 @forelse($groupedByPeserta as $nomorPeserta => $hasilPeserta)
-    @php $namaSiswa = $hasilPeserta->first()->peserta->nama ?? '-'; @endphp
+    @php
+        $namaSiswa = $hasilPeserta->first()->peserta->nama ?? '-';
+        $pesertaId = $hasilPeserta->first()->peserta_id;
+    @endphp
     <div class="card" style="margin-bottom: 20px; background: #1e2235;">
-        <h3 style="color: #38bdf8; margin-bottom: 4px;">👤 {{ $namaSiswa }}</h3>
-        <p style="color:#8a90a6; font-size:13px; margin-top:0; margin-bottom:15px;">No. Peserta: {{ $nomorPeserta }}</p>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+            <div>
+                <h3 style="color: #38bdf8; margin-bottom: 4px;">👤 {{ $namaSiswa }}</h3>
+                <p style="color:#8a90a6; font-size:13px; margin-top:0; margin-bottom:15px;">No. Peserta: {{ $nomorPeserta }}</p>
+            </div>
+            <form action="{{ route('admin.nilai.deleteByPeserta', $pesertaId) }}" method="POST" onsubmit="return confirm('Yakin mau hapus SEMUA hasil ujian milik {{ $namaSiswa }}? Semua materi yang sudah dikerjakan akan terhapus dan tidak bisa dikembalikan.')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn-delete"><i class="fas fa-trash-alt"></i> Hapus Semua</button>
+            </form>
+        </div>
         <table>
             <thead>
                 <tr>
